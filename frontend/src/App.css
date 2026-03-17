@@ -1,4 +1,3 @@
-/* Global Styles */
 * {
   margin: 0;
   padding: 0;
@@ -6,7 +5,8 @@
 }
 
 html,
-body {
+body,
+#root {
   height: 100%;
 }
 
@@ -17,15 +17,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-#root {
-  height: 100%;
-}
-
-/* Reset some default styles */
-button {
-  font-family: inherit;
-}
-
+button,
 input,
 textarea {
   font-family: inherit;
@@ -36,14 +28,12 @@ a {
   text-decoration: none;
 }
 
-/* Utility Classes */
 .container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 20px;
 }
 
-/* Scrollbar Styling */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -62,7 +52,6 @@ a {
   background: #555;
 }
 
-/* Global Animations */
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -79,7 +68,6 @@ a {
   }
 }
 
-/* Loading State */
 .loading {
   display: inline-block;
   width: 20px;
@@ -89,15 +77,6 @@ a {
   border-top-color: #667eea;
   animation: spin 1s linear infinite;
 }
-  list-style: none;
-  padding: 0;
-  display: flex;
-  gap: 8px;
-  margin: 32px 0 0;
-
-  .logo {
-    height: 18px;
-  }
 
   a {
     color: var(--text-h);
