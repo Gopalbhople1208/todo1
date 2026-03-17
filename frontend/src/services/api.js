@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:3232';
+const API_BASE_URL = 'https://todo1-1-3evz.onrender.com';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
