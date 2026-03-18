@@ -25,14 +25,14 @@ export default function TaskList({ tasks, onEdit, onDelete }) {
                 onClick={() => onEdit(task)}
                 title="Edit task"
               >
-                ✏️
+                Update
               </button>
               <button 
                 className="btn-delete" 
                 onClick={() => onDelete(task._id)}
                 title="Delete task"
               >
-                🗑️
+                Delete
               </button>
             </div>
           </div>
