@@ -1009,7 +1009,39 @@ app.put("/updateTask/:id", async (req, res) => {
 });
 
 
+// Middleware to verify user
+const authenticate = (req, res, next) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(401).json({ message: "Unauthorized" });
 
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.userEmail = decoded.email; // Extracted from token
+    next();
+  } catch (err) {
+    res.status(401).json({ message: "Invalid Token" });
+  }
+};
+
+// Apply to routes
+app.get("/tasks", authenticate, async (req, res) => {
+  const db = await connection();
+  // CRITICAL: Filter by req.userEmail
+  const tasks = await db.collection("tasks")
+    .find({ userEmail: req.userEmail }) 
+    .toArray();
+  res.json({ success: true, data: tasks });
+});
+
+app.post("/add-task", authenticate, async (req, res) => {
+  const db = await connection();
+  const result = await db.collection("tasks").insertOne({
+    ...req.body,
+    userEmail: req.userEmail, // Save the owner's email
+    createdAt: new Date()
+  });
+  res.json({ success: true, data: result });
+});
 
 
 /* ---------------- SERVER ---------------- */
