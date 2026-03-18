@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../hooks/useAuth';
 import '../styles/auth.css';
 
@@ -104,14 +103,7 @@ export default function Signup() {
             {loading ? 'Creating account...' : 'Sign Up'}
           </button>
         </form>
-       <div className="divider">OR</div>
-
-            <div className="google-login">
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={() => setLocalError('Google login failed')}
-          />
-        </div>
+          
         <p className="auth-link">
           Already have an account? <Link to="/login">Login</Link>
         </p>
