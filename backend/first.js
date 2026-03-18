@@ -448,6 +448,24 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 app.get("/health", (req, res) => res.send("Server is running!"));
 
+
+
+// Middleware to extract user email from the JWT token
+const authenticate = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.status(401).json({ success: false, message: "Unauthorized" });
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.userEmail = decoded.email; // Now we know WHO is asking
+    next();
+  } catch (err) {
+    res.status(403).json({ success: false, message: "Invalid Token" });
+  }
+};  
+
 /* ---------------- GOOGLE LOGIN ---------------- */
 
 app.post("/google-login", async (req, res) => {
@@ -805,22 +823,22 @@ app.post("/signup", async (req, res) => {
 
 
 
-app.post("/add-task", async (req, res) => {
-  try {
-    const { title, description } = req.body;
-    if (!title) return res.status(400).json({ success: false, message: "Title required" });
+// app.post("/add-task", async (req, res) => {
+//   try {
+//     const { title, description } = req.body;
+//     if (!title) return res.status(400).json({ success: false, message: "Title required" });
 
-    const db = await connection();
-    const result = await db.collection(collectionName).insertOne({
-      title,
-      description,
-      createdAt: new Date()
-    });
-    res.json({ success: true, data: result });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Server error" });
-  }
-});
+//     const db = await connection();
+//     const result = await db.collection(collectionName).insertOne({
+//       title,
+//       description,
+//       createdAt: new Date()
+//     });
+//     res.json({ success: true, data: result });
+//   } catch (error) {
+//     res.status(500).json({ success: false, message: "Server error" });
+//   }
+// });
 // app.post("/add-task", async (req, res) => {
 //   try {
 //     const { title, description } = req.body;
@@ -892,18 +910,47 @@ app.post("/add-task", async (req, res) => {
 
 /* ---------------- GET TASK LIST ---------------- */
 
-app.get("/", async (req, res) => {
+// app.get("/", async (req, res) => {
+//   try {
+//     const db = await connection();
+//     const tasks = await db.collection(collectionName).find().toArray();
+//     res.json({ success: true, data: tasks });
+//   } catch (err) {
+//     res.status(500).json({ success: false, error: err.message });
+//   }
+// });
+
+
+
+// GET only the logged-in user's tasks
+app.get("/", authenticate, async (req, res) => {
   try {
     const db = await connection();
-    const tasks = await db.collection(collectionName).find().toArray();
+    const tasks = await db.collection(collectionName)
+      .find({ userEmail: req.userEmail }) // FILTER applied here
+      .toArray();
     res.json({ success: true, data: tasks });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false });
   }
 });
 
-
-
+// ADD task with the owner's email
+app.post("/add-task", authenticate, async (req, res) => {
+  try {
+    const { title, description } = req.body;
+    const db = await connection();
+    const result = await db.collection(collectionName).insertOne({
+      title,
+      description,
+      userEmail: req.userEmail, // TAG applied here
+      createdAt: new Date()
+    });
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});
 
 // app.get("/", async (req, res) => {
 //   try {
@@ -1009,39 +1056,7 @@ app.put("/updateTask/:id", async (req, res) => {
 });
 
 
-// Middleware to verify user
-const authenticate = (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) return res.status(401).json({ message: "Unauthorized" });
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.userEmail = decoded.email; // Extracted from token
-    next();
-  } catch (err) {
-    res.status(401).json({ message: "Invalid Token" });
-  }
-};
-
-// Apply to routes
-app.get("/tasks", authenticate, async (req, res) => {
-  const db = await connection();
-  // CRITICAL: Filter by req.userEmail
-  const tasks = await db.collection("tasks")
-    .find({ userEmail: req.userEmail }) 
-    .toArray();
-  res.json({ success: true, data: tasks });
-});
-
-app.post("/add-task", authenticate, async (req, res) => {
-  const db = await connection();
-  const result = await db.collection("tasks").insertOne({
-    ...req.body,
-    userEmail: req.userEmail, // Save the owner's email
-    createdAt: new Date()
-  });
-  res.json({ success: true, data: result });
-});
 
 
 /* ---------------- SERVER ---------------- */
